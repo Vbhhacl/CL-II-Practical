@@ -1,0 +1,99 @@
+Ir 4 
+Implement e-mail spam filtering using text classification
+algorithm with appropriate dataset.
+# 1. Import Libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+# 2. Load Dataset
+df = pd.read_csv("spam.csv")
+print("Dataset:")
+print(df.head())
+# 3. Data Cleaning
+df = df[["Category", "Messages"]]
+df = df.dropna()
+df = df.drop_duplicates()
+df["Messages"] = df["Messages"].str.lower()
+# 4. Separate Input and Output
+X = df["Messages"]
+y = df["Category"].str.lower().map({
+    "ham": 0,
+    "spam": 1
+})
+print("\nCategory Distribution:")
+print(df["Category"].value_counts())
+# 5. Train-Test Split
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.20,
+    random_state=42,
+    stratify=y
+)
+# 6. TF-IDF Feature Extraction
+vectorizer = TfidfVectorizer(
+    stop_words="english",
+    max_features=5000
+)
+X_train_tfidf = vectorizer.fit_transform(X_train)
+X_test_tfidf = vectorizer.transform(X_test)
+# 7. KNN Model
+knn = KNeighborsClassifier(
+    n_neighbors=5,
+    metric="cosine"
+)
+knn.fit(X_train_tfidf, y_train)
+# 8. Prediction
+y_pred = knn.predict(X_test_tfidf)
+# 9. Accuracy
+accuracy = accuracy_score(y_test, y_pred)
+
+print("\nAccuracy:", round(accuracy * 100, 2), "%")
+
+# 10. Confusion Matrix
+cm = confusion_matrix(y_test, y_pred)
+print("\nConfusion Matrix:")
+print(cm)
+plt.figure(figsize=(5, 4))
+sns.heatmap(
+    cm,
+    annot=True,
+    fmt="d",
+    xticklabels=["Ham", "Spam"],
+    yticklabels=["Ham", "Spam"]
+)
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.title("KNN Spam Classification")
+plt.show()
+# 11. Performance Metrics
+TN, FP, FN, TP = cm.ravel()
+precision = TP / (TP + FP)
+sensitivity = TP / (TP + FN)
+specificity = TN / (TN + FP)
+print("\nPerformance Metrics:")
+print("Precision:", round(precision * 100, 2), "%")
+print("Sensitivity:", round(sensitivity * 100, 2), "%")
+print("Specificity:", round(specificity * 100, 2), "%")
+# 12. Classification Report
+print("\nClassification Report:")
+print(
+    classification_report(
+        y_test,
+        y_pred,
+        target_names=["Ham", "Spam"]
+    )
+)
+# 13. Test New Message
+def predict_spam(message):
+    message = message.lower()
+    message_tfidf = vectorizer.transform([message])
+    prediction = knn.predict(message_tfidf)[0]
+    return "SPAM" if prediction == 1 else "HAM"
+message = "Congratulations! You have won a free prize. Call now!"
+print("\nNew Message Prediction:")
+print(predict_spam(message))

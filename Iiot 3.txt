@@ -1,0 +1,27 @@
+int pir = 2;
+
+void setup()
+{
+  pinMode(pir, INPUT);
+  Serial.begin(9600);
+
+  Serial.println("PIR Starting...");
+  delay(30000);
+  Serial.println("PIR Ready");
+}
+
+void loop()
+{
+  if (digitalRead(pir) == HIGH)
+  {
+    Serial.println("Motion Detected");
+  }
+  else
+  {
+    Serial.println("No Motion");
+  }
+
+  delay(2000);
+}
+
+Output :

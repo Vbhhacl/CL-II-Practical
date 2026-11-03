@@ -1,0 +1,35 @@
+Ir 1 
+Write a program for pre-processing of a text document such
+as stop word removal, stemming.
+
+
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+# Download required NLTK resources
+nltk.download(&#39;punkt&#39;)
+nltk.download(&#39;punkt_tab&#39;)
+nltk.download(&#39;stopwords&#39;)
+# Sample text
+new_text = &quot;The quick brown fox jumps over the lazy dog.&quot;
+# Tokenize the text
+new_words = word_tokenize(new_text)
+# Load English stopwords
+stop_words = set(stopwords.words(&#39;english&#39;))
+# Remove stopwords and punctuation
+new_filtered_words = [
+word for word in new_words
+if word.lower() not in stop_words and word.isalpha()
+]
+# Join the filtered words
+new_clean_text = &#39; &#39;.join(new_filtered_words)
+# Display results
+print(&quot;Original Text:&quot;)
+print(new_text)
+print(&quot;\nTokenized Words:&quot;)
+print(new_words)
+print(&quot;\nText after Stopword Removal:&quot;)
+print(new_clean_text)
+
+
+

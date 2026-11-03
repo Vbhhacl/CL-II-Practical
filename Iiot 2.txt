@@ -1,0 +1,61 @@
+#include <WebServer.h>
+#include <DHT.h>
+#include <wifi>
+// ---------- Wi-Fi ----------
+const char* ssid = "VVV123";
+const char* password = "98765678";
+// ---------- DHT22 ----------
+#define DHTPIN 4
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+WebServer server(80);
+// ---------- Alert Limits ----------
+float temperatureLimit = 35.0;
+float humidityLimit = 80.0;
+// ---------- Web Page ----------
+void handleHome() {
+  float temperature = dht.readTemperature();
+  float humidity = dht.readHumidity();
+  String alert = "Environment Normal";
+  if (temperature > temperatureLimit) {
+    alert = "ALERT: High Temperature!";
+  }
+  if (humidity > humidityLimit) {
+    alert = "ALERT: High Humidity!";
+  }
+  String page = "<html><head>";
+  page += "<meta http-equiv='refresh' content='2'>";
+  page += "<title>ESP32 IIoT Monitoring</title>";
+  page += "</head>";
+  page += "<body style='text-align:center; font-family:Arial;'>";
+  page += "<h1>ESP32 IIoT Monitoring</h1>";
+  page += "<h2>Temperature</h2>";
+  page += "<h3>" + String(temperature, 2) + " &deg;C</h3>";
+  page += "<h2>Humidity</h2>";
+  page += "<h3>" + String(humidity, 2) + " %</h3>";
+  page += "<h2>Alert</h2>";
+  page += "<h3>" + alert + "</h3>";
+  page += "</body></html>";
+  server.send(200, "text/html", page);
+}
+// ---------- Setup ----------
+void setup() {
+  Serial.begin(115200);
+  dht.begin();
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to WiFi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println();
+  Serial.println("WiFi Connected!");
+  Serial.print("Open this IP in browser: ");
+  Serial.println(WiFi.localIP());
+  server.on("/", handleHome);
+  server.begin();
+  Serial.println("Web Server Started!");
+}
+// ---------- Loop ----------
+void loop() {
+  server.handleClient();

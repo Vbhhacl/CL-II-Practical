@@ -1,0 +1,63 @@
+#include <WiFi.h>
+#include <WebServer.h>
+#include <DHT.h>
+// ---------- Wi-Fi ----------
+const char* ssid = "VVV123";
+const char* password = "98765678";
+// ---------- Web Security ----------
+const char* webUser = "admin";
+const char* webPassword = "esp32";
+// ---------- DHT22 ----------
+#define DHTPIN 4
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+// ---------- Web Server ----------
+WebServer server(80);
+// ---------- Web Page ----------
+void handleHome() {
+  // Security check
+  if (!server.authenticate(webUser, webPassword)) {
+    return server.requestAuthentication();
+  }
+  float temperature = dht.readTemperature();
+  float humidity = dht.readHumidity();
+  String page = "<html>";
+  page += "<head>";
+  page += "<meta http-equiv='refresh' content='2'>";
+  page += "<title>ESP32 IIoT Monitoring</title>";
+  page += "</head>";
+  page += "<body style='text-align:center; font-family:Arial;'>";
+  page += "<h1>ESP32 IIoT Monitoring System</h1>";
+  page += "<h2>Temperature</h2>";
+  page += "<h3>" + String(temperature, 2) + " &deg;C</h3>";
+  page += "<h2>Humidity</h2>";
+  page += "<h3>" + String(humidity, 2) + " %</h3>";
+  page += "<p><b>Security:</b> Authentication Enabled</p>";
+  page += "</body>";
+  page += "</html>";
+  server.send(200, "text/html", page);
+}
+// ---------- Setup ----------
+void setup() {
+  Serial.begin(115200);
+  dht.begin();
+  // Connect to Wi-Fi
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to WiFi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println();
+  Serial.println("WiFi Connected!");
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.localIP());
+  // Web server
+  server.on("/", handleHome);
+  server.begin();
+  Serial.println("Secure Web Server Started!");
+}
+// ---------- Loop ----------
+void loop() {
+  server.handleClient();
+}

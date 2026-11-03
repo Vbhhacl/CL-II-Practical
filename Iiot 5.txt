@@ -1,0 +1,65 @@
+Program : (program to create csv file from real time temperature data)
+#include "DHT.h"
+#define DHTPIN 4
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+int readingNo = 1;
+float temperature;
+float humidity;
+void setup() {
+  Serial.begin(9600);
+  dht.begin();
+  delay(2000);
+  // CSV header
+  Serial.println("Reading_No,Temperature_C,Humidity_Percent");
+}
+void loop() {
+  temperature = dht.readTemperature();
+  humidity = dht.readHumidity();
+  if (isnan(temperature) || isnan(humidity)) {
+    Serial.println("Sensor reading failed");
+    delay(2000);
+    return;
+  }
+  // CSV data row
+  Serial.print(readingNo++);
+  Serial.print(",");
+  Serial.print(temperature);
+  Serial.print(",");
+  Serial.println(humidity);
+  if (temperature > 40) {
+    Serial.println("WARNING: High Temperature!");
+  }
+  delay(2000);
+}
+
+
+
+Program : (to plot graph using csv file)
+import pandas as pd
+import matplotlib.pyplot as plt
+df = pd.read_csv("sensor_readings.csv")
+# Temperature Graph
+plt.figure(figsize=(10, 5))
+plt.plot(df["Time_ms"], df["Temperature_C"],
+         marker="o", linestyle="-", linewidth=2)
+plt.xlabel("Reading Number")
+plt.ylabel("Temperature (°C)")
+plt.title("DHT22 Temperature Analysis")
+plt.grid(True)
+plt.ylim(df["Temperature_C"].min() - 0.5,
+         df["Temperature_C"].max() + 0.5)
+plt.tight_layout()
+plt.show()
+# Humidity Graph
+plt.figure(figsize=(10, 5))
+plt.plot(df["Time_ms"], df["Humidity_percent"],
+         marker="o", linestyle="-", linewidth=2)
+plt.xlabel("Reading Number")
+plt.ylabel("Humidity (%)")
+plt.title("DHT22 Humidity Analysis")
+plt.grid(True)
+plt.ylim(df["Humidity_percent"].min() - 0.2,
+         df["Humidity_percent"].max() + 0.2)
+plt.tight_layout()
+plt.show()
